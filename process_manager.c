@@ -8,14 +8,12 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include "queue.h"
-#include <semaphore.h>
 
 typedef struct {
    int id;
    int items_to_produce;
    Queue *belt;
    int belt_size;
-   sem_t* start_sem;
 } ProcessManagerArgs;
 
 static void* producer(void* arg) {
@@ -51,9 +49,8 @@ static void* consumer(void* arg) {
    pthread_exit(NULL);
 }
 
-int process_manager(int id, int belt_size, int items_to_produce, sem_t* sem) {
+int process_manager(int id, int belt_size, int items_to_produce) {
    // Wait for factory_manager's signal to start
-   sem_wait(sem);
    printf("[OK][process_manager] Process_manager with id %d waiting to produce %d elements.\n", id, items_to_produce);
 
    // Initialize the belt (queue)
@@ -67,7 +64,7 @@ int process_manager(int id, int belt_size, int items_to_produce, sem_t* sem) {
 
    // Create producer and consumer threads
    pthread_t producer_thread, consumer_thread;
-   ProcessManagerArgs args = {id, items_to_produce, &queue, belt_size, sem};
+   ProcessManagerArgs args = {id, items_to_produce, &queue, belt_size};
 
    if (pthread_create(&producer_thread, NULL, producer, &args) != 0) {
 	   fprintf(stderr, "[ERROR][process_manager] Failed to create producer thread.\n");

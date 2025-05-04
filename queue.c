@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include "queue.h"
 Queue queue_create(int size, int *feedback){
-    Queue queue = { NULL, 0, 0, 0, 0, PTHREAD_MUTEX_INITIALIZER, 
+    Queue queue = { NULL, size, 0, 0, 0, PTHREAD_MUTEX_INITIALIZER, 
         PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER, 0 };
     * feedback = queue_init(&queue);
     return queue;
@@ -29,7 +29,6 @@ int queue_init(Queue *queue) {
         return -1;
     }
 
-    queue->size = size;
     queue->count = 0;
     queue->in = 0;
     queue->out = 0;

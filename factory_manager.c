@@ -9,7 +9,6 @@
  #include <unistd.h>
  #include <fcntl.h>
  #include <stddef.h>
- #include <semaphore.h>
  #include <sys/stat.h>
  #include <pthread.h>
 
@@ -17,7 +16,6 @@ typedef struct {
     int id;
     int max_size;
     int num_elements;
-    sem_t sem;
 } ProcessManager;
 
 typedef struct {
@@ -28,9 +26,6 @@ typedef struct {
 
 static void cleanup_resources(FactoryState *state) {
     if (state) {
-        for (int i = 0; i < state->count; i++) {
-            sem_destroy(&state->managers[i].sem);
-        }
         free(state->managers);
     }
 }
@@ -52,12 +47,13 @@ static int parse_input_file(const char *filename, FactoryState *state) {
 
     int id, size, elements;
     while (fscanf(file, "%d %d %d", &id, &size, &elements) == 3) {
+        printf("My id is: %d,   My size is: %d,     My # elements are: %d\n", id, size, elements);
         if (state->count >= state->max_belts) {
             fclose(file);
             return -1;
         }
+        state->managers[state->count] = (ProcessManager){id, size, elements};
         state->count++;
-        state->managers[state->count] = (ProcessManager){id, size, elements, {0}};
     }
 
     if (!feof(file) || ferror(file)) {
@@ -70,10 +66,9 @@ static int parse_input_file(const char *filename, FactoryState *state) {
 
 static void* process_manager_wrapper(void *arg) {
     ProcessManager *pm = (ProcessManager *)arg;
-    extern int process_manager(int, int, int, sem_t*);  // Defined in process_manager.c
+    extern int process_manager(int, int, int);  // Defined in process_manager.c
     
-    sem_wait(&pm->sem);
-    int result = process_manager(pm->id, pm->max_size, pm->num_elements, &pm->sem);
+    int result = process_manager(pm->id, pm->max_size, pm->num_elements);
     return (result == 0) ? (void*)0 : (void*)-1;
 }
 
@@ -88,14 +83,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "[ERROR][factory_manager] Invalid file.\n");
         cleanup_resources(&state);
         return -1;
-    }
-
-    // Initialize semaphores
-    for (int i = 0; i < state.count; i++) {
-        if (sem_init(&state.managers[i].sem, 0, 0) != 0) {
-            cleanup_resources(&state);
-            return -1;
-        }
     }
 
     // Create threads
@@ -113,11 +100,6 @@ int main(int argc, char **argv) {
             return -1;
         }
         printf("[OK][factory_manager] Process_manager with id %d has been created.\n", state.managers[i].id);
-    }
-
-    // Signal semaphores in order to enforce execution sequence
-    for (int i = 0; i < state.count; i++) {
-        sem_post(&state.managers[i].sem);
     }
 
     // Wait for completion
