@@ -1,36 +1,141 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <pthread.h>
 #include "queue.h"
 
-//To create a queue
-int queue_init(int size){
-	return 0;
+typedef struct {
+    struct element **buffer;
+    int size;
+    int count;
+    int in;
+    int out;
+    pthread_mutex_t mutex;
+    pthread_cond_t not_full;
+    pthread_cond_t not_empty;
+    int initialized;
+} Queue;
+
+static Queue queue = { NULL, 0, 0, 0, 0, PTHREAD_MUTEX_INITIALIZER, 
+                       PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER, 0 };
+
+int queue_init(int size) {
+    if (size <= 0) {
+        return -1;
+    }
+
+    pthread_mutex_lock(&queue.mutex);
+
+    if (queue.initialized) {
+        pthread_mutex_unlock(&queue.mutex);
+        return -1;
+    }
+
+    queue.buffer = malloc(size * sizeof(struct element *));
+    if (!queue.buffer) {
+        pthread_mutex_unlock(&queue.mutex);
+        return -1;
+    }
+
+    queue.size = size;
+    queue.count = 0;
+    queue.in = 0;
+    queue.out = 0;
+
+    pthread_mutex_init(&queue.mutex, NULL);
+    pthread_cond_init(&queue.not_full, NULL);
+    pthread_cond_init(&queue.not_empty, NULL);
+    queue.initialized = 1;
+
+    pthread_mutex_unlock(&queue.mutex);
+    return 0;
 }
 
+int queue_destroy(void) {
+    pthread_mutex_lock(&queue.mutex);
 
-// To Enqueue an element
-int queue_put(struct element* x) {
-	return 0;
+    if (!queue.initialized) {
+        pthread_mutex_unlock(&queue.mutex);
+        return -1;
+    }
+
+    free(queue.buffer);
+    queue.buffer = NULL;
+    queue.size = 0;
+    queue.count = 0;
+    queue.in = 0;
+    queue.out = 0;
+    queue.initialized = 0;
+
+    pthread_mutex_unlock(&queue.mutex);
+
+    pthread_mutex_destroy(&queue.mutex);
+    pthread_cond_destroy(&queue.not_full);
+    pthread_cond_destroy(&queue.not_empty);
+
+    return 0;
 }
 
+int queue_put(struct element *elem) {
+    if (!queue.initialized || !elem) {
+        return -1;
+    }
 
-// To Dequeue an element.
-struct element* queue_get(void) {
-	return NULL;
+    pthread_mutex_lock(&queue.mutex);
+
+    while (queue.count == queue.size) {
+        pthread_cond_wait(&queue.not_full, &queue.mutex);
+    }
+
+    queue.buffer[queue.in] = elem;
+    queue.in = (queue.in + 1) % queue.size;
+    queue.count++;
+
+    pthread_cond_signal(&queue.not_empty);
+    pthread_mutex_unlock(&queue.mutex);
+
+    return 0;
 }
 
+struct element *queue_get(void) {
+    if (!queue.initialized) {
+        return NULL;
+    }
 
-//To check queue state
-int queue_empty(void){
-	return 0;
+    pthread_mutex_lock(&queue.mutex);
+
+    while (queue.count == 0) {
+        pthread_cond_wait(&queue.not_empty, &queue.mutex);
+    }
+
+    struct element *elem = queue.buffer[queue.out];
+    queue.out = (queue.out + 1) % queue.size;
+    queue.count--;
+
+    pthread_cond_signal(&queue.not_full);
+    pthread_mutex_unlock(&queue.mutex);
+
+    return elem;
 }
 
-int queue_full(void){
-	return 0;
+int queue_empty(void) {
+    if (!queue.initialized) {
+        return 1;
+    }
+
+    pthread_mutex_lock(&queue.mutex);
+    int empty = (queue.count == 0);
+    pthread_mutex_unlock(&queue.mutex);
+    return empty;
 }
 
-//To destroy the queue and free the resources
-int queue_destroy(void){
-	return 0;
+int queue_full(void) {
+    if (!queue.initialized) {
+        return 0;
+    }
+
+    pthread_mutex_lock(&queue.mutex);
+    int full = (queue.count == queue.size);
+    pthread_mutex_unlock(&queue.mutex);
+    return full;
 }
