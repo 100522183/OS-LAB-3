@@ -21,7 +21,6 @@ typedef struct {
 static void* producer(void* arg) {
    ProcessManagerArgs* args = (ProcessManagerArgs*)arg;
    for (int i = 0; i < args->items_to_produce; i++) {
-      printf("Hey, i am producing%i\n", i);
 	   struct element* ele = malloc(sizeof(struct element));
 	   ele->num_edition = i;
 	   ele->id_belt = args->id;

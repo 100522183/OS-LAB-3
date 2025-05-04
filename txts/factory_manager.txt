@@ -56,8 +56,7 @@ static int parse_input_file(const char *filename, FactoryState *state) {
             fclose(file);
             return -1;
         }
-        state->count++;
-        state->managers[state->count] = (ProcessManager){id, size, elements, {0}};
+        state->managers[state->count++] = (ProcessManager){id, size, elements, {0}};
     }
 
     if (!feof(file) || ferror(file)) {
