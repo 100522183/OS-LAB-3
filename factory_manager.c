@@ -47,9 +47,17 @@ static int parse_input_file(const char *filename, FactoryState *state) {
 
     int id, size, elements;
     while (fscanf(file, "%d %d %d", &id, &size, &elements) == 3) {
-        printf("My id is: %d,   My size is: %d,     My # elements are: %d\n", id, size, elements);
+
         if (state->count >= state->max_belts) {
             fclose(file);
+            return -1;
+        }
+        if (elements<0){
+            fclose(file);
+            return -1;
+        }
+        if (elements == 0){
+            printf("[ERROR][factory_manager] No process manager is going to be created as there are no elements to be produced");
             return -1;
         }
         state->managers[state->count] = (ProcessManager){id, size, elements};

@@ -19,15 +19,14 @@ typedef struct {
 static void* producer(void* arg) {
    ProcessManagerArgs* args = (ProcessManagerArgs*)arg;
    for (int i = 0; i < args->items_to_produce; i++) {
-      printf("Hey, i am producing%i\n", i);
 	   struct element* ele = malloc(sizeof(struct element));
 	   ele->num_edition = i;
 	   ele->id_belt = args->id;
       if (i==args->items_to_produce-1){
          ele->last = 1;
       }
-      Queue queue = *args->belt;
-	   queue_put(&queue, ele);
+      Queue *queue = args->belt;
+	   queue_put(queue, ele);
 	   printf("[OK][queue] Introduced element with id %d in belt %d.\n", i, args->id);
    }
    pthread_exit(NULL);
@@ -35,9 +34,9 @@ static void* producer(void* arg) {
 
 static void* consumer(void* arg) {
    ProcessManagerArgs* args = (ProcessManagerArgs*)arg;
-   Queue queue = *args->belt;
+   Queue *queue = args->belt;
    while (1) {
-	   struct element* ele = queue_get(&queue);
+	   struct element* ele = queue_get(queue);
 	   if (ele->last) {
 		   printf("[OK][queue] Obtained element with id %d in belt %d.\n", ele->num_edition, args->id);
 		   free(ele);

@@ -1,0 +1,11 @@
+﻿Test Case ID,Description,Input,Expected Output,Expected Exit Code,Validation Criteria
+TC1,Single belt test && more elements than capacity of the belt,1 101 3 5,"[OK] messages for belt 101, proper queue operations",0,Verify single belt creation and proper producer-consumer operation
+TC2,Multiple belts test,3 101 3 5 102 2 3 103 5 2,"[OK] messages for all belts, proper sequencing",0,Verify multiple belts work concurrently and in order
+TC3,More belts than max test,2 101 3 5 102 2 3 103 5 2,[ERROR][factory_manager] Invalid file.,1,Verify program rejects files with more belts than max
+TC4,Zero max belts test,0,[ERROR][factory_manager] Invalid file.,1,Verify program rejects zero max belts
+TC5,Negative belt size test,1 101 -3 5,[ERROR][factory_manager] Invalid file.,1,Verify program rejects negative belt sizes
+TC6,Negative elements test,1 101 3 -5,[ERROR][factory_manager] Invalid file.,1,Verify program rejects negative element counts
+TC7,Single element test,1 101 1 1,Proper single element production/consumption,0,Verify edge case of single element works
+TC8,Full belt utilization test,1 101 3 3,Proper full belt operation,0,Verify belt fills completely without deadlock
+TC9,No products,1 101 3 0,Proper functioning but no production/consumption,0,Verify 0 elements is possible
+TC10,One more than 0 (minimum) and one less than the maximum,1 101 2 1,Proper functioning,0,Verify boundaries are respected
