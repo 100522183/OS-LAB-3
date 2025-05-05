@@ -60,10 +60,12 @@ EOF
 cat > test8.txt << EOF
 1 101 3 3
 EOF
+
 # TC9: No products (zero elements)
 cat > test9.txt << EOF
 1 101 3 0
 EOF
+
 # TC10: One more than min and one less than max
 cat > test10.txt << EOF
 1 101 2 1
