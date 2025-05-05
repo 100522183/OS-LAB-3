@@ -82,13 +82,13 @@ static void* process_manager_wrapper(void *arg) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        printf(stderr, "[ERROR][factory_manager] Invalid file.\n");
+        perror("[ERROR][factory_manager] Invalid file.\n");
         return -1;
     }
 
     FactoryState state = {0};
     if (parse_input_file(argv[1], &state) != 0) {
-        printf(stderr, "[ERROR][factory_manager] Invalid file.\n");
+        perror("[ERROR][factory_manager] Invalid file.\n");
         cleanup_resources(&state);
         return -1;
     }
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
         void *retval;
         pthread_join(threads[i], &retval);
         if ((long)retval != 0) {
-            printf(stderr, "[ERROR][factory_manager] Process_manager with id %d failed.\n", state.managers[i].id);
+            fprintf(stderr, "[ERROR][factory_manager] Process_manager with id %d failed.\n", state.managers[i].id);
             any_error = 1;
         } else {
             printf("[OK][factory_manager] Process_manager with id %d has finished.\n", state.managers[i].id);

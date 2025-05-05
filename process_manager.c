@@ -56,7 +56,7 @@ int process_manager(int id, int belt_size, int items_to_produce) {
    int feedback;
    Queue queue = queue_create(belt_size, &feedback);
    if (feedback) {
-	   printf(stderr, "[ERROR][process_manager] Belt initialization failed for id %d.\n", id);
+	   fprintf(stderr, "[ERROR][process_manager] Belt initialization failed for id %d.\n", id);
 	   return -1;
    }
    printf("[OK][process_manager] Belt with id %d has been created with a maximum of %d elements.\n", id, belt_size);
@@ -66,13 +66,13 @@ int process_manager(int id, int belt_size, int items_to_produce) {
    ProcessManagerArgs args = {id, items_to_produce, &queue, belt_size};
 
    if (pthread_create(&producer_thread, NULL, producer, &args) != 0) {
-	   printf(stderr, "[ERROR][process_manager] Failed to create producer thread.\n");
+	   perror("[ERROR][process_manager] Failed to create producer thread.\n");
 	   queue_destroy(&queue);
 	   return -1;
    }
 
    if (pthread_create(&consumer_thread, NULL, consumer, &args) != 0) {
-	   printf(stderr, "[ERROR][process_manager] Failed to create consumer thread.\n");
+	   perror("[ERROR][process_manager] Failed to create consumer thread.\n");
 	   pthread_cancel(producer_thread);
 	   queue_destroy(&queue);
 	   return -1;
@@ -84,7 +84,7 @@ int process_manager(int id, int belt_size, int items_to_produce) {
 
    // Cleanup
    if (queue_destroy(&queue)) {
-	   printf(stderr, "[ERROR][process_manager] Belt destruction failed for id %d.\n", id);
+	   fprintf(stderr, "[ERROR][process_manager] Belt destruction failed for id %d.\n", id);
 	   return -1;
    }
 
