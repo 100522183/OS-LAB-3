@@ -57,7 +57,7 @@ static int parse_input_file(const char *filename, FactoryState *state) {
             return -1;
         }
         if (elements == 0){
-            printf("[ERROR][factory_manager] No process manager is going to be created as there are no elements to be produced");
+            perror("[ERROR][factory_manager] No process manager is going to be created as there are no elements to be produced");
             return -1;
         }
         state->managers[state->count] = (ProcessManager){id, size, elements};

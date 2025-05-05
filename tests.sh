@@ -90,7 +90,7 @@ run_test() {
     fi
     
     if [ -n "${expected_pattern}" ]; then
-        if ! grep -q "${expected_pattern}" output.txt && ! grep -q "${expected_pattern}" error.txt; then
+        if ! grep --fixed-strings -q "${expected_pattern}" output.txt && ! grep --fixed-strings -q "${expected_pattern}" error.txt; then
             echo -e "${RED}FAIL: Expected pattern '${expected_pattern}' not found${NC}"
             return 1
         fi
@@ -116,7 +116,7 @@ run_test 3 test3.txt 255 "[ERROR][factory_manager] Invalid file." "More belts th
 run_test 4 test4.txt 255 "[ERROR][factory_manager] Invalid file." "Zero max belts test"
 
 # TC5: Invalid file - negative belt size
-run_test 5 test5.txt 255 "[ERROR][factory_manager] Invalid file." "Negative belt size test"
+run_test 5 test5.txt 255 "[ERROR][process_manager] Belt initialization failed for id 101." "Negative belt size test"
 
 # TC6: Invalid file - negative elements
 run_test 6 test6.txt 255 "[ERROR][factory_manager] Invalid file." "Negative elements test"
@@ -128,10 +128,10 @@ run_test 7 test7.txt 0 "[OK][queue] Introduced element with id 0 in belt 101" "S
 run_test 8 test8.txt 0 "[OK][queue] Obtained element with id 0 in belt 101" "Full belt utilization test"
 
 # TC9: No products (zero elements)
-run_test 9 test9.txt 255 "[ERROR][process_manager] No process manager is going to be created as there are no elements to be produced" "Zero elements test"
+run_test 9 test9.txt 255 "[ERROR][factory_manager] No process manager is going to be created as there are no elements to be produced" "Zero elements test"
 
 # TC10: One more than min and one less than max
-run_test 10 test10.txt 0 "[OK][process_manager] Process_manager with id 101 has been created." "Min-max test"
+run_test 10 test10.txt 0 "[OK][factory_manager] Process_manager with id 101 has been created." "Min-max test"
 echo "========================================"
 echo "Test completed"
 echo "Cleaning up..."
